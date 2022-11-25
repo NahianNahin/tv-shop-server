@@ -86,6 +86,36 @@ async function run() {
             const result = await productsCollection.insertOne(product);
             res.send(result);
         })
+        //GET ADVERTISE UPDATE
+        app.put('/product/get_advertise/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    advertised: true
+                },
+            };
+            const result = await productsCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
+        })
+        //REMOVE ADVERTISE UPDATE
+        app.put('/product/remove_advertise/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    advertised: false
+                },
+            };
+            const result = await productsCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
+        })
         // update Data
         app.get('/update', async (req, res) => {
             
