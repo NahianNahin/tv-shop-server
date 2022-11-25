@@ -20,6 +20,7 @@ async function run() {
         const usersCollection = client.db("TV-Shop").collection("users");
         const categoriesCollection = client.db("TV-Shop").collection("Categories");
         const productsCollection = client.db("TV-Shop").collection("products");
+        const bookingsCollection = client.db("TV-Shop").collection("bookings");
 
 
         //Post User Details
@@ -61,8 +62,8 @@ async function run() {
             const result = await productsCollection.insertOne(product);
             res.send(result);
         })
-           // update Data
-           app.get('/updateCategories/:id', async (req, res) => {
+        // update Data
+        app.get('/updateCategories/:id', async (req, res) => {
             const id = req.params.id;
             const filter = {
                 _id: ObjectId(id)
@@ -70,12 +71,44 @@ async function run() {
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
-                    bgColor:'bg-neutral',
+                    bgColor: 'bg-neutral',
                     color: 'text-white'
                 },
             };
             const result = await categoriesCollection.updateOne(filter, updateDoc, options);
             res.send(result)
+        })
+       
+        // Get Bookings by email
+        app.get('/bookings', async (req, res) => {
+            const selectedEmail = req.query.email;
+            const filter = {
+                email: selectedEmail
+            }
+            const booking = await bookingsCollection.find(filter).toArray();
+            // console.log(booking);
+            res.send(booking);
+        })
+        // Get Bookings by id
+        app.get('/bookings/:id',async(req,res)=>{
+            const id = req.params.id;
+            const query = {
+                _id : ObjectId(id)
+            }
+            const result = await bookingsCollection.findOne(query);
+            res.send(result);
+        })
+        // Post Bookings
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            const result = await bookingsCollection.insertOne(booking);
+            res.send(result);
+        })
+        // Delete anything
+        app.get('/deleteBookings', async (req, res) => {
+            const query = {};
+            const result = await bookingsCollection.deleteMany(query);
+            res.send(result);
         })
     } finally {
         //   await client.close();
