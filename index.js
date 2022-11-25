@@ -67,6 +67,15 @@ async function run() {
             const result = await productsCollection.find(filter).toArray();
             res.send(result)
         })
+        // Get Product by Advertised
+        app.get('/advertise_products', async(req, res) => {
+            const filter = {
+                advertised : true
+            }
+            const result = await productsCollection.find(filter).toArray();
+            res.send(result)
+        })
+        
          //Get All  Product
          app.get('/products', async (req, res) => {
             const query = {};
