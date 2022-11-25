@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -21,6 +22,7 @@ async function run() {
         const categoriesCollection = client.db("TV-Shop").collection("Categories");
         const productsCollection = client.db("TV-Shop").collection("products");
         const bookingsCollection = client.db("TV-Shop").collection("bookings");
+        const paymentsCollection = client.db("TV-Shop").collection("payments");
 
 
         //Post User Details
@@ -78,7 +80,7 @@ async function run() {
             const result = await categoriesCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
-       
+
         // Get Bookings by email
         app.get('/bookings', async (req, res) => {
             const selectedEmail = req.query.email;
@@ -90,10 +92,10 @@ async function run() {
             res.send(booking);
         })
         // Get Bookings by id
-        app.get('/bookings/:id',async(req,res)=>{
+        app.get('/bookings/:id', async (req, res) => {
             const id = req.params.id;
             const query = {
-                _id : ObjectId(id)
+                _id: ObjectId(id)
             }
             const result = await bookingsCollection.findOne(query);
             res.send(result);
@@ -104,6 +106,48 @@ async function run() {
             const result = await bookingsCollection.insertOne(booking);
             res.send(result);
         })
+
+
+        // PAYMENT
+        // Stripe intent
+        app.post("/create-payment-intent", async (req, res) => {
+            const booking = req.body;
+            const price = booking.price;
+            const amount = price * 100;
+
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                "payment_method_types": [
+                    "card"
+                ],
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
+
+        // Post Payment 
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment);
+            const id = payment.bookingId;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const updateDoc = {
+                $set: {
+                    paid: true,
+                    transation_id: payment.transationId
+                },
+            };
+            const updateresult = await bookingsCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
+        })
+
         // Delete anything
         app.get('/deleteBookings', async (req, res) => {
             const query = {};
