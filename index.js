@@ -24,14 +24,26 @@ async function run() {
         const bookingsCollection = client.db("TV-Shop").collection("bookings");
         const paymentsCollection = client.db("TV-Shop").collection("payments");
 
-
+        // Get User by role
+        app.get('/users', async (req, res) => {
+            const setRole = req.query.role;
+            const query = { role: setRole };
+            const result = await usersCollection.find(query).toArray();
+            res.send(result);
+        })
         //Post User Details
         app.post('/users', async (req, res) => {
             const user = req.body;
             const result = await usersCollection.insertOne(user);
             res.send(result);
         })
-
+        // Delete User
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await usersCollection.deleteOne(query);
+            res.send(result);
+        })
         // Get Categories 
         app.get('/categories', async (req, res) => {
             const query = {};
@@ -45,8 +57,18 @@ async function run() {
             const result = await productsCollection.find(query).toArray();
             res.send(result);
         })
-        //Get All  Product
-        app.get('/products', async (req, res) => {
+       
+        // Get Product by seller
+        app.get('/products', async(req, res) => {
+            const setSellerEmail = req.query.email;
+            const filter = {
+                sellerEmail : setSellerEmail
+            }
+            const result = await productsCollection.find(filter).toArray();
+            res.send(result)
+        })
+         //Get All  Product
+         app.get('/products', async (req, res) => {
             const query = {};
             const result = await productsCollection.find(query).toArray();
             res.send(result);
@@ -65,19 +87,18 @@ async function run() {
             res.send(result);
         })
         // update Data
-        app.get('/updateCategories/:id', async (req, res) => {
-            const id = req.params.id;
+        app.get('/update', async (req, res) => {
+            
             const filter = {
-                _id: ObjectId(id)
+                
             }
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
-                    bgColor: 'bg-neutral',
-                    color: 'text-white'
+                    sellerEmail:'ariyankhan702018@gmail.com'
                 },
             };
-            const result = await categoriesCollection.updateOne(filter, updateDoc, options);
+            const result = await productsCollection.updateMany(filter, updateDoc, options);
             res.send(result)
         })
 
