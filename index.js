@@ -76,6 +76,14 @@ async function run() {
             const result = await productsCollection.find(filter).toArray();
             res.send(result)
         })
+        // Get Product by Reported
+        app.get('/reported_products', async(req, res) => {
+            const filter = {
+                reported : true
+            }
+            const result = await productsCollection.find(filter).toArray();
+            res.send(result)
+        })
         
          //Get All  Product
          app.get('/products', async (req, res) => {
@@ -125,6 +133,28 @@ async function run() {
             };
             const result = await productsCollection.updateOne(filter, updateDoc, options);
             res.send(result)
+        })
+        //GET REPORT UPDATE
+        app.put('/product/add_reported/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    reported: true
+                },
+            };
+            const result = await productsCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
+        })
+         // Delete User
+         app.delete('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await productsCollection.deleteOne(query);
+            res.send(result);
         })
         // update Data
         app.get('/update', async (req, res) => {
