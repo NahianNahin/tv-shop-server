@@ -23,6 +23,7 @@ async function run() {
         const productsCollection = client.db("TV-Shop").collection("products");
         const bookingsCollection = client.db("TV-Shop").collection("bookings");
         const paymentsCollection = client.db("TV-Shop").collection("payments");
+        const blogsCollection = client.db("TV-Shop").collection("blogs");
 
         // Get User by role
         app.get('/users', async (req, res) => {
@@ -212,6 +213,12 @@ async function run() {
         app.get('/deleteBookings', async (req, res) => {
             const query = {};
             const result = await bookingsCollection.deleteMany(query);
+            res.send(result);
+        })
+        // Get All blogs
+        app.get('/blogs', async(req, res) => {
+            const query = {};
+            const result = await blogsCollection.find(query).toArray();
             res.send(result);
         })
     } finally {
