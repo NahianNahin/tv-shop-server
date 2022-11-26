@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
@@ -9,8 +10,23 @@ const port = process.env.PORT || 5000;
 //MiddleWare
 app.use(cors());
 app.use(express.json());
+// Verify JWT Token
+function verifyJWT(req, res, next) {
 
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).sent('Unauthorized Access');
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_JWT_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).sent('Forbidden Access');
+        }
+        req.decoded = decoded;
+        next();
+    })
 
+}
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.4k7t9co.mongodb.net/?retryWrites=true&w=majority`;
@@ -58,35 +74,35 @@ async function run() {
             const result = await productsCollection.find(query).toArray();
             res.send(result);
         })
-       
+
         // Get Product by seller
-        app.get('/products', async(req, res) => {
+        app.get('/products', async (req, res) => {
             const setSellerEmail = req.query.email;
             const filter = {
-                sellerEmail : setSellerEmail
+                sellerEmail: setSellerEmail
             }
             const result = await productsCollection.find(filter).toArray();
             res.send(result)
         })
         // Get Product by Advertised
-        app.get('/advertise_products', async(req, res) => {
+        app.get('/advertise_products', async (req, res) => {
             const filter = {
-                advertised : true
+                advertised: true
             }
             const result = await productsCollection.find(filter).toArray();
             res.send(result)
         })
         // Get Product by Reported
-        app.get('/reported_products', async(req, res) => {
+        app.get('/reported_products', async (req, res) => {
             const filter = {
-                reported : true
+                reported: true
             }
             const result = await productsCollection.find(filter).toArray();
             res.send(result)
         })
-        
-         //Get All  Product
-         app.get('/products', async (req, res) => {
+
+        //Get All  Product
+        app.get('/products', async (req, res) => {
             const query = {};
             const result = await productsCollection.find(query).toArray();
             res.send(result);
@@ -149,8 +165,8 @@ async function run() {
             const result = await productsCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
-         // Delete User
-         app.delete('/product/:id', async (req, res) => {
+        // Delete User
+        app.delete('/product/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const result = await productsCollection.deleteOne(query);
@@ -158,14 +174,14 @@ async function run() {
         })
         // update Data
         app.get('/update', async (req, res) => {
-            
+
             const filter = {
-                
+
             }
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
-                    sellerEmail:'ariyankhan702018@gmail.com'
+                    sellerEmail: 'ariyankhan702018@gmail.com'
                 },
             };
             const result = await productsCollection.updateMany(filter, updateDoc, options);
@@ -246,7 +262,7 @@ async function run() {
             res.send(result);
         })
         // Get All blogs
-        app.get('/blogs', async(req, res) => {
+        app.get('/blogs', async (req, res) => {
             const query = {};
             const result = await blogsCollection.find(query).toArray();
             res.send(result);
@@ -257,7 +273,15 @@ async function run() {
 }
 run().catch(console.dir);
 
-
+// Get Jwt Token
+app.get('/jwt', (req, res) => {
+    const selectEmail = req.query.email;
+    const user = {
+        email: selectEmail
+    }
+    const token = jwt.sign(user, process.env.ACCESS_JWT_TOKEN, { expiresIn: '7d' });
+    res.send({ token })
+})
 app.get('/', (req, res) => {
     res.send('TV Shop server is running')
 })
