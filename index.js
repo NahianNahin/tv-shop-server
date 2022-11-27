@@ -48,7 +48,7 @@ async function run() {
             res.send(result);
         })
         // Get User by role
-        app.get('/users', verifyJWT, async (req, res) => {
+        app.get('/users_role', verifyJWT, async (req, res) => {
             const setRole = req.query.role;
             const query = { role: setRole };
             const result = await usersCollection.find(query).toArray();
@@ -78,13 +78,28 @@ async function run() {
             const result = await usersCollection.deleteOne(query);
             res.send(result);
         })
+        // Check Seller
+        app.get('/users_seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isSeller: user?.role === 'Seller' });
+        })
+        // Check Buyer
+        app.get('/users_buyer/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isBuyer: user?.role === 'Buyer' });
+        })
         // Check Admin
-        app.get('/users/:email', async (req, res) => {
+        app.get('/users_admin/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email }
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'Admin' });
         })
+        
         // Get Categories 
         app.get('/categories', async (req, res) => {
             const query = {};
