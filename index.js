@@ -40,14 +40,21 @@ async function run() {
         const bookingsCollection = client.db("TV-Shop").collection("bookings");
         const paymentsCollection = client.db("TV-Shop").collection("payments");
         const blogsCollection = client.db("TV-Shop").collection("blogs");
-
+        // Get User by Email
+        app.get('/users', verifyJWT, async (req, res) => {
+            const setEmail = req.query.email;
+            const query = { email: setEmail };
+            const result = await usersCollection.findOne(query);
+            res.send(result);
+        })
         // Get User by role
-        app.get('/users',verifyJWT, async (req, res) => {
+        app.get('/users', verifyJWT, async (req, res) => {
             const setRole = req.query.role;
             const query = { role: setRole };
             const result = await usersCollection.find(query).toArray();
             res.send(result);
         })
+        
         //put User Details
         app.put('/users', async (req, res) => {
             const email = req.query.email;
@@ -56,7 +63,7 @@ async function run() {
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
-                    name : user.name,
+                    name: user.name,
                     role: user.role,
                     photoURL: user.photoURL
                 },
@@ -65,11 +72,18 @@ async function run() {
             res.send(result);
         })
         // Delete User
-        app.delete('/users/:id',verifyJWT, async (req, res) => {
+        app.delete('/users/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const result = await usersCollection.deleteOne(query);
             res.send(result);
+        })
+        // Check Admin
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isAdmin: user?.role === 'Admin' });
         })
         // Get Categories 
         app.get('/categories', async (req, res) => {
