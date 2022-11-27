@@ -42,20 +42,30 @@ async function run() {
         const blogsCollection = client.db("TV-Shop").collection("blogs");
 
         // Get User by role
-        app.get('/users', async (req, res) => {
+        app.get('/users',verifyJWT, async (req, res) => {
             const setRole = req.query.role;
             const query = { role: setRole };
             const result = await usersCollection.find(query).toArray();
             res.send(result);
         })
-        //Post User Details
-        app.post('/users', async (req, res) => {
+        //put User Details
+        app.put('/users', async (req, res) => {
+            const email = req.query.email;
+            const filter = { email: email }
             const user = req.body;
-            const result = await usersCollection.insertOne(user);
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    name : user.name,
+                    role: user.role,
+                    photoURL: user.photoURL
+                },
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
         // Delete User
-        app.delete('/users/:id', async (req, res) => {
+        app.delete('/users/:id',verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const result = await usersCollection.deleteOne(query);
