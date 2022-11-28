@@ -181,7 +181,8 @@ async function run() {
         // Get Product by Advertised
         app.get('/advertise_products', async (req, res) => {
             const filter = {
-                advertised: true
+                advertised: true,
+                sold: false
             }
             const result = await productsCollection.find(filter).toArray();
             res.send(result)
@@ -341,7 +342,7 @@ async function run() {
 
         // PAYMENT
         // Stripe intent
-        app.post("/create-payment-intent",verifyJWT, verifyBuyer, async (req, res) => {
+        app.post("/create-payment-intent", verifyJWT, verifyBuyer, async (req, res) => {
             const booking = req.body;
             const price = booking.price;
             const amount = price * 100;
@@ -361,20 +362,30 @@ async function run() {
         });
 
         // Post Payment 
-        app.post('/payments',verifyJWT, verifyBuyer, async (req, res) => {
+        app.post('/payments', verifyJWT, verifyBuyer, async (req, res) => {
             const payment = req.body;
             const result = await paymentsCollection.insertOne(payment);
             const id = payment.bookingId;
+            const productId = payment.product_id;
             const filter = {
                 _id: ObjectId(id)
             }
-            const updateDoc = {
+            const query = {
+                _id: ObjectId(productId)
+            }
+            const updateBooking = {
                 $set: {
                     paid: true,
                     transation_id: payment.transationId
                 },
             };
-            const updateresult = await bookingsCollection.updateOne(filter, updateDoc);
+            const updateProduct = {
+                $set: {
+                    sold: true
+                },
+            };
+            const updateresultBooking = await bookingsCollection.updateOne(filter, updateBooking);
+            const updateresultproduct = await productsCollection.updateOne(query, updateProduct);
             res.send(result);
 
         })
